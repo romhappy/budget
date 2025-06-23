@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionnaire Budget Couple</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #4CAF50;
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+        }
+
+        .section h2::before {
+            content: "💰";
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        input[type="number"] {
+            padding: 12px 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #4CAF50;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 30px 0;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 150px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            color: white;
+        }
+
+        .btn-tertiary {
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .results {
+            background: linear-gradient(135deg, #e8f5e8, #f1f8e9);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 25px;
+            border: 2px solid #4CAF50;
+        }
+
+        .results h3 {
+            color: #2e7d32;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            text-align: center;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .result-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .result-item h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .result-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 5px;
+        }
+
+        .result-description {
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .file-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            button {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💑 Gestionnaire Budget Couple</h1>
+            <p>Gérez facilement vos finances communes</p>
+        </div>
+
+        <div class="content">
+            <!-- Revenus et charges fixes -->
+            <div class="section">
+                <h2>Revenus et Charges Fixes</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="revenu-vous">Votre revenu mensuel (€)</label>
+                        <input type="number" id="revenu-vous" step="0.01" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="revenu-compagne">Revenu de votre compagne (€)</label>
+                        <input type="number" id="revenu-compagne" step="0.01" value="0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vos charges -->
+            <div class="section">
+                <h2>Vos Charges Personnelles</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="internet">Internet (€)</label>
+                        <input type="number" id="internet" step="0.01" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="cantine">Cantine scolaire (€)</label>
+                        <input type="number" id="cantine" step="0.01" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="gaz">Gaz (€)</label>
+                        <input type="number" id="gaz" step="0.01" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="electricite">Électricité (€)</label>
+                        <input type="number" id="electricite" step="0.01" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="epargne">Épargne pour votre fille (€)</label>
+                        <input type="number" id="epargne" step="0.01" value="0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charges de votre compagne -->
+            <div class="section">
+                <h2>Charges de Votre Compagne</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="assurances">Assurances (€)</label>
+                        <input type="number" id="assurances" step="0.01" value="0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charges communes -->
+            <div class="section">
+                <h2>Charges Communes</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="nourriture">Budget nourriture par personne (€)</label>
+                        <input type="number" id="nourriture" step="0.01" value="350">
+                    </div>
+                    <div class="form-group">
+                        <label for="credit-immobilier">Crédit immobilier (€)</label>
+                        <input type="number" id="credit-immobilier" step="0.01" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="charges-copro">Charges copropriété (€)</label>
+                        <input type="number" id="charges-copro" step="0.01" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="impots-foncier">Impôts foncier (€)</label>
+                        <input type="number" id="impots-foncier" step="0.01" value="0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button class="btn-primary" onclick="calculer()">📊 Calculer</button>
+                <button class="btn-secondary" onclick="sauvegarder()">💾 Sauvegarder JSON</button>
+                <button class="btn-tertiary" onclick="exporterPDF()">📄 Exporter PDF</button>
+                <label for="file-input" class="file-label">📁 Charger JSON</label>
+                <input type="file" id="file-input" class="file-input" accept=".json" onchange="chargerJSON(event)">
+                <button class="btn-danger" onclick="reinitialiser()">🔄 Réinitialiser</button>
+            </div>
+
+            <div id="resultats" class="results" style="display: none;">
+                <h3>📈 Résultats de Répartition</h3>
+                <div class="result-grid">
+                    <div class="result-item">
+                        <h4>Votre contribution</h4>
+                        <div class="result-value" id="contribution-vous">0 €</div>
+                        <div class="result-description">Pour le compte crédit commun</div>
+                    </div>
+                    <div class="result-item">
+                        <h4>Contribution compagne</h4>
+                        <div class="result-value" id="contribution-compagne">0 €</div>
+                        <div class="result-description">Pour le compte crédit commun</div>
+                    </div>
+                    <div class="result-item">
+                        <h4>Total charges communes</h4>
+                        <div class="result-value" id="total-charges-communes">0 €</div>
+                        <div class="result-description">Crédit + Charges + Impôts</div>
+                    </div>
+                    <div class="result-item">
+                        <h4>Votre reste à vivre</h4>
+                        <div class="result-value" id="reste-vous">0 €</div>
+                        <div class="result-description">Après toutes charges</div>
+                    </div>
+                    <div class="result-item">
+                        <h4>Reste à vivre compagne</h4>
+                        <div class="result-value" id="reste-compagne">0 €</div>
+                        <div class="result-description">Après toutes charges</div>
+                    </div>
+                    <div class="result-item">
+                        <h4>Répartition des contributions</h4>
+                        <div class="result-value" id="equite">50% / 50%</div>
+                        <div class="result-description">Pour égaliser les restes à vivre</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        let donneesFinancieres = {};
+
+        function calculer() {
+            // Récupération des données
+            const revenuVous = parseFloat(document.getElementById('revenu-vous').value) || 0;
+            const revenuCompagne = parseFloat(document.getElementById('revenu-compagne').value) || 0;
+            
+            const vosCharges = {
+                internet: parseFloat(document.getElementById('internet').value) || 0,
+                cantine: parseFloat(document.getElementById('cantine').value) || 0,
+                gaz: parseFloat(document.getElementById('gaz').value) || 0,
+                electricite: parseFloat(document.getElementById('electricite').value) || 0,
+                epargne: parseFloat(document.getElementById('epargne').value) || 0
+            };
+            
+            const chargesCompagne = {
+                assurances: parseFloat(document.getElementById('assurances').value) || 0
+            };
+            
+            const chargesCommunes = {
+                nourriture: parseFloat(document.getElementById('nourriture').value) || 350,
+                creditImmobilier: parseFloat(document.getElementById('credit-immobilier').value) || 0,
+                chargesCopro: parseFloat(document.getElementById('charges-copro').value) || 0,
+                impotsFoncier: parseFloat(document.getElementById('impots-foncier').value) || 0
+            };
+
+            // Calculs
+            const totalVosCharges = Object.values(vosCharges).reduce((a, b) => a + b, 0);
+            const totalChargesCompagne = Object.values(chargesCompagne).reduce((a, b) => a + b, 0);
+            const totalChargesCommunes = chargesCommunes.creditImmobilier + chargesCommunes.chargesCopro + chargesCommunes.impotsFoncier;
+            
+            // Calcul pour égaliser les restes à vivre
+            const revenuNetVous = revenuVous - totalVosCharges - chargesCommunes.nourriture;
+            const revenuNetCompagne = revenuCompagne - totalChargesCompagne - chargesCommunes.nourriture;
+            const revenuNetTotal = revenuNetVous + revenuNetCompagne;
+            
+            // Répartition pour égaliser les restes à vivre
+            const resteVivreCible = (revenuNetTotal - totalChargesCommunes) / 2;
+            const contributionVous = revenuNetVous - resteVivreCible;
+            const contributionCompagne = revenuNetCompagne - resteVivreCible;
+            
+            // Vérification que les contributions ne sont pas négatives
+            const contributionVousFinale = Math.max(0, contributionVous);
+            const contributionCompagneFinale = Math.max(0, contributionCompagne);
+            
+            // Recalcul des restes à vivre réels
+            const resteVous = revenuNetVous - contributionVousFinale;
+            const resteCompagne = revenuNetCompagne - contributionCompagneFinale;
+            
+            // Pourcentages de contribution pour affichage
+            const pourcentageVous = totalChargesCommunes > 0 ? (contributionVousFinale / totalChargesCommunes * 100) : 50;
+            const pourcentageCompagne = totalChargesCommunes > 0 ? (contributionCompagneFinale / totalChargesCommunes * 100) : 50;
+
+            // Sauvegarde des données
+            donneesFinancieres = {
+                revenus: { vous: revenuVous, compagne: revenuCompagne },
+                vosCharges,
+                chargesCompagne,
+                chargesCommunes,
+                resultats: {
+                    contributionVous: contributionVousFinale,
+                    contributionCompagne: contributionCompagneFinale,
+                    totalChargesCommunes,
+                    resteVous,
+                    resteCompagne,
+                    pourcentageVous,
+                    pourcentageCompagne
+                }
+            };
+
+            // Affichage des résultats
+            document.getElementById('contribution-vous').textContent = contributionVousFinale.toFixed(2) + ' €';
+            document.getElementById('contribution-compagne').textContent = contributionCompagneFinale.toFixed(2) + ' €';
+            document.getElementById('total-charges-communes').textContent = totalChargesCommunes.toFixed(2) + ' €';
+            document.getElementById('reste-vous').textContent = resteVous.toFixed(2) + ' €';
+            document.getElementById('reste-compagne').textContent = resteCompagne.toFixed(2) + ' €';
+            document.getElementById('equite').textContent = pourcentageVous.toFixed(1) + '% / ' + pourcentageCompagne.toFixed(1) + '%';
+            
+            document.getElementById('resultats').style.display = 'block';
+            
+            afficherToast('Calculs effectués avec succès !', '#4CAF50');
+        }
+
+        function sauvegarder() {
+            if (Object.keys(donneesFinancieres).length === 0) {
+                afficherToast('Veuillez d\'abord effectuer un calcul', '#f44336');
+                return;
+            }
+
+            const dataStr = JSON.stringify(donneesFinancieres, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `budget-couple-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            afficherToast('Données sauvegardées !', '#4CAF50');
+        }
+
+        function chargerJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    // Chargement des données dans les champs
+                    document.getElementById('revenu-vous').value = data.revenus?.vous || 0;
+                    document.getElementById('revenu-compagne').value = data.revenus?.compagne || 0;
+                    
+                    document.getElementById('internet').value = data.vosCharges?.internet || 0;
+                    document.getElementById('cantine').value = data.vosCharges?.cantine || 0;
+                    document.getElementById('gaz').value = data.vosCharges?.gaz || 0;
+                    document.getElementById('electricite').value = data.vosCharges?.electricite || 0;
+                    document.getElementById('epargne').value = data.vosCharges?.epargne || 0;
+                    
+                    document.getElementById('assurances').value = data.chargesCompagne?.assurances || 0;
+                    
+                    document.getElementById('nourriture').value = data.chargesCommunes?.nourriture || 350;
+                    document.getElementById('credit-immobilier').value = data.chargesCommunes?.creditImmobilier || 0;
+                    document.getElementById('charges-copro').value = data.chargesCommunes?.chargesCopro || 0;
+                    document.getElementById('impots-foncier').value = data.chargesCommunes?.impotsFoncier || 0;
+                    
+                    afficherToast('Données chargées avec succès !', '#4CAF50');
+                    calculer(); // Recalcul automatique
+                    
+                } catch (error) {
+                    afficherToast('Erreur lors du chargement du fichier', '#f44336');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function exporterPDF() {
+            if (Object.keys(donneesFinancieres).length === 0) {
+                afficherToast('Veuillez d\'abord effectuer un calcul', '#f44336');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Configuration
+            doc.setFont('helvetica');
+            let yPosition = 20;
+            
+            // Titre
+            doc.setFontSize(20);
+            doc.setTextColor(76, 175, 80);
+            doc.text('Gestionnaire Budget Couple', 20, yPosition);
+            yPosition += 15;
+            
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Rapport généré le ${new Date().toLocaleDateString('fr-FR')}`, 20, yPosition);
+            yPosition += 20;
+            
+            // Revenus
+            doc.setFontSize(16);
+            doc.setTextColor(76, 175, 80);
+            doc.text('REVENUS', 20, yPosition);
+            yPosition += 10;
+            
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Votre revenu: ${donneesFinancieres.revenus.vous.toFixed(2)} €`, 25, yPosition);
+            yPosition += 8;
+            doc.text(`Revenu compagne: ${donneesFinancieres.revenus.compagne.toFixed(2)} €`, 25, yPosition);
+            yPosition += 8;
+            doc.text(`Total revenus: ${(donneesFinancieres.revenus.vous + donneesFinancieres.revenus.compagne).toFixed(2)} €`, 25, yPosition);
+            yPosition += 20;
+            
+            // Vos charges
+            doc.setFontSize(16);
+            doc.setTextColor(76, 175, 80);
+            doc.text('VOS CHARGES PERSONNELLES', 20, yPosition);
+            yPosition += 10;
+            
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            Object.entries(donneesFinancieres.vosCharges).forEach(([key, value]) => {
+                const labels = {
+                    internet: 'Internet',
+                    cantine: 'Cantine scolaire',
+                    gaz: 'Gaz',
+                    electricite: 'Électricité',
+                    epargne: 'Épargne fille'
+                };
+                doc.text(`${labels[key]}: ${value.toFixed(2)} €`, 25, yPosition);
+                yPosition += 8;
+            });
+            
+            const totalVosCharges = Object.values(donneesFinancieres.vosCharges).reduce((a, b) => a + b, 0);
+            doc.text(`Total vos charges: ${totalVosCharges.toFixed(2)} €`, 25, yPosition);
+            yPosition += 20;
+            
+            // Charges compagne
+            doc.setFontSize(16);
+            doc.setTextColor(76, 175, 80);
+            doc.text('CHARGES DE VOTRE COMPAGNE', 20, yPosition);
+            yPosition += 10;
+            
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Assurances: ${donneesFinancieres.chargesCompagne.assurances.toFixed(2)} €`, 25, yPosition);
+            yPosition += 20;
+            
+            // Charges communes
+            doc.setFontSize(16);
+            doc.setTextColor(76, 175, 80);
+            doc.text('CHARGES COMMUNES', 20, yPosition);
+            yPosition += 10;
+            
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Budget nourriture (par personne): ${donneesFinancieres.chargesCommunes.nourriture.toFixed(2)} €`, 25, yPosition);
+            yPosition += 8;
+            doc.text(`Total nourriture couple: ${(donneesFinancieres.chargesCommunes.nourriture * 2).toFixed(2)} €`, 25, yPosition);
+            yPosition += 8;
+            doc.text(`Crédit immobilier: ${donneesFinancieres.chargesCommunes.creditImmobilier.toFixed(2)} €`, 25, yPosition);
+            yPosition += 8;
+            doc.text(`Charges copropriété: ${donneesFinancieres.chargesCommunes.chargesCopro.toFixed(2)} €`, 25, yPosition);
+            yPosition += 8;
+            doc.text(`Impôts foncier: ${donneesFinancieres.chargesCommunes.impotsFoncier.toFixed(2)} €`, 25, yPosition);
+            yPosition += 20;
+            
+            // Résultats
+            doc.setFontSize(18);
+            doc.setTextColor(76, 175, 80);
+            doc.text('RÉPARTITION CALCULÉE', 20, yPosition);
+            yPosition += 15;
+            
+            doc.setFontSize(14);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Votre contribution au compte crédit: ${donneesFinancieres.resultats.contributionVous.toFixed(2)} €`, 25, yPosition);
+            yPosition += 10;
+            doc.text(`Contribution de votre compagne: ${donneesFinancieres.resultats.contributionCompagne.toFixed(2)} €`, 25, yPosition);
+            yPosition += 10;
+            doc.text(`Votre reste à vivre: ${donneesFinancieres.resultats.resteVous.toFixed(2)} €`, 25, yPosition);
+            yPosition += 10;
+            doc.text(`Reste à vivre compagne: ${donneesFinancieres.resultats.resteCompagne.toFixed(2)} €`, 25, yPosition);
+            yPosition += 10;
+            doc.text(`Répartition: ${donneesFinancieres.resultats.pourcentageVous.toFixed(1)}% / ${donneesFinancieres.resultats.pourcentageCompagne.toFixed(1)}%`, 25, yPosition);
+            
+            doc.save(`budget-couple-${new Date().toISOString().split('T')[0]}.pdf`);
+            afficherToast('PDF exporté avec succès !', '#4CAF50');
+        }
+
+        function reinitialiser() {
+            if (confirm('Êtes-vous sûr de vouloir réinitialiser tous les champs ?')) {
+                const inputs = document.querySelectorAll('input[type="number"]');
+                inputs.forEach(input => {
+                    if (input.id === 'nourriture') {
+                        input.value = '350';
+                    } else {
+                        input.value = '0';
+                    }
+                });
+                
+                document.getElementById('resultats').style.display = 'none';
+                donneesFinancieres = {};
+                
+                afficherToast('Données réinitialisées', '#FF9800');
+            }
+        }
+
+        function afficherToast(message, couleur = '#4CAF50') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.background = couleur;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Calcul automatique lors de la modification des champs
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('input[type="number"]');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    if (Object.keys(donneesFinancieres).length > 0) {
+                        setTimeout(calculer, 500); // Délai pour éviter trop de calculs
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
